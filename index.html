@@ -158,6 +158,14 @@
   .detail-bloque { flex: 1; text-align: center; background: var(--cream); border-radius: 8px; padding: 6px; }
   .detail-bloque .dv { font-size: 18px; font-family: 'Caveat', cursive; }
   .detail-bloque .dl { font-family: 'Josefin Sans', sans-serif; font-size: 10px; color: var(--ink-light); text-transform: uppercase; }
+  .detail-bloques-full { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+  .detail-bloque-full { background: var(--cream); border-radius: 10px; padding: 10px 12px; }
+  .detail-bloque-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .detail-bloque-label { font-family: 'Josefin Sans', sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-light); }
+  .detail-bloque-vals { font-family: 'Caveat', cursive; font-size: 22px; font-weight: 600; }
+  .detail-bloque-obj { font-family: 'Josefin Sans', sans-serif; font-size: 12px; color: var(--ink-light); font-weight: 400; }
+  .detail-bar-wrap { height: 5px; background: rgba(196,105,74,0.12); border-radius: 3px; overflow: hidden; }
+  .detail-bar { height: 100%; border-radius: 3px; transition: width .4s ease; }
   .detail-ejercicio { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-style: italic; color: var(--sage-dark); padding-top: 8px; border-top: 1px solid rgba(196,105,74,0.1); margin-top: 6px; }
   .detail-medidas { display: flex; gap: 10px; padding-top: 8px; border-top: 1px solid rgba(196,105,74,0.1); margin-top: 6px; }
   .detail-medida { flex: 1; text-align: center; }
@@ -503,6 +511,7 @@ function drawDual(id,d1,d2,c1,c2){
 function renderCalendario(){
   document.getElementById('cal-titulo').textContent=`${MESES[calMonth]} ${calYear}`;
   const first=new Date(calYear,calMonth,1).getDay(),days=new Date(calYear,calMonth+1,0).getDate();
+  const keys=['p','c','g','f','v'];
   const td=new Date();
   let html=DIAS_S.map(d=>`<div class="cal-header">${d}</div>`).join('');
   for(let i=0;i<first;i++)html+=`<div class="cal-day empty"></div>`;
@@ -513,8 +522,12 @@ function renderCalendario(){
     const tot=data?calcTotales(data.seleccionadas||{}):null;
     const total=tot?Object.values(tot).reduce((a,b)=>a+b,0):0;
     const hasEj=data?.ejercicio?.length>0;
-    const dot=!tot?'#2e2b28':total>=10?'var(--ok)':total>=6?'var(--warn)':'var(--over)';
-    html+=`<div class="cal-day ${isToday?'today':''} ${data&&total>0?'has-data':''}" onclick="showDayDetail('${key}',${d})"><div class="cal-num">${d}</div><div class="cal-dot" style="background:${dot}"></div>${hasEj?'<div class="cal-ej">🏋️</div>':''}</div>`;
+    // Check if ALL macros meet objetivo
+    const allOk = tot && keys.every(k=>tot[k]>=OBJETIVO[k]);
+    const anyData = tot && Object.values(tot).some(v=>v>0);
+    const dot = !anyData ? 'rgba(196,105,74,0.12)' : allOk ? 'var(--ok)' : total>=6 ? 'var(--c)' : 'var(--over)';
+    const dayBg = !anyData ? '' : allOk ? 'rgba(92,122,82,0.12)' : '';
+    html+=`<div class="cal-day ${isToday?'today':''} ${anyData?'has-data':''}" style="${dayBg?'background:'+dayBg:''}" onclick="showDayDetail('${key}',${d})"><div class="cal-num">${d}</div><div class="cal-dot" style="background:${dot}"></div>${hasEj?'<div class="cal-ej">🏋️</div>':''}</div>`;
   }
   document.getElementById('cal-grid').innerHTML=html;
 }
@@ -523,12 +536,26 @@ function showDayDetail(key,day){
   const data=state.historial[key],detail=document.getElementById('day-detail');
   if(!data){detail.classList.remove('show');return;}
   const tot=calcTotales(data.seleccionadas||{});
-  const keys=['p','c','g','f','v'],colors=['var(--p)','var(--c)','var(--g)','var(--f)','var(--v)'],labels=['P','C','G','F','V'];
-  const bh=keys.map((k,i)=>`<div class="detail-bloque"><div class="dv" style="color:${colors[i]}">${fmt(tot[k])}</div><div class="dl">${labels[i]}</div></div>`).join('');
+  const keys=['p','c','g','f','v'];
+  const labels=['Proteína','Carb','Grasa','Fruta','Verdura'];
+  const colors=['var(--p)','var(--c)','var(--g)','var(--f)','var(--v)'];
+  const bh=keys.map((k,i)=>{
+    const val=tot[k], obj=OBJETIVO[k], pct=Math.min(100,(val/obj)*100);
+    const over=val>obj, ok=val>=obj;
+    const barColor=over?'var(--over)':ok?'var(--ok)':colors[i];
+    const textColor=over?'var(--over)':ok?'var(--ok)':colors[i];
+    return `<div class="detail-bloque-full">
+      <div class="detail-bloque-header">
+        <span class="detail-bloque-label">${labels[i]}</span>
+        <span class="detail-bloque-vals" style="color:${textColor}">${fmt(val)}<span class="detail-bloque-obj"> / ${obj}</span></span>
+      </div>
+      <div class="detail-bar-wrap"><div class="detail-bar" style="width:${pct}%;background:${barColor}"></div></div>
+    </div>`;
+  }).join('');
   const ej=data.ejercicio?.length?`<div class="detail-ejercicio">🏋️ ${data.ejercicio.join(', ')}${data.ejNotas?' · '+data.ejNotas:''}</div>`:'';
   const med=data.medidas;
   const mh=med?`<div class="detail-medidas">${med.peso?`<div class="detail-medida"><div class="dm">${med.peso}kg</div><div class="dl">Peso</div></div>`:''} ${med.cintura?`<div class="detail-medida"><div class="dm">${med.cintura}cm</div><div class="dl">Cintura</div></div>`:''} ${med.brazo?`<div class="detail-medida"><div class="dm">${med.brazo}cm</div><div class="dl">Brazo</div></div>`:''}</div>`:'';
-  detail.innerHTML=`<div class="day-detail-title">${day} ${MESES[calMonth]}</div><div class="detail-bloques">${bh}</div>${ej}${mh}`;
+  detail.innerHTML=`<div class="day-detail-title">${day} ${MESES[calMonth]}</div><div class="detail-bloques-full">${bh}</div>${ej}${mh}`;
   detail.classList.add('show');
 }
 
