@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Bloques · Galancho</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Josefin+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f5efe6;
+    --cream-dark: #ebe4d6;
+    --warm-white: #fffcf7;
+    --terracotta: #c4694a;
+    --terracotta-dark: #a8533a;
+    --terracotta-light: #d4836a;
+    --ink: #3d3a35;
+    --ink-light: #6b6560;
+    --sage: #7a9a6d;
+    --sage-dark: #5c7a52;
+    --blush: #d4a0a0;
+    /* macro colors */
+    --bg: var(--cream);
+    --surface: var(--warm-white);
+    --surface2: var(--cream-dark);
+    --border: rgba(196,105,74,0.18);
+    --text: var(--ink);
+    --muted: var(--ink-light);
+    --p: #c4694a;
+    --c: #b07840;
+    --g: #5c7a52;
+    --f: #a0607a;
+    --v: #3a7a78;
+    --ok: #5c7a52;
+    --over: #c4694a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', serif;
+    min-height: 100vh;
+    padding-bottom: 20px;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+  .page { position: relative; z-index: 1; }
+  nav { display: flex; background: rgba(255,252,247,0.95); border-bottom: 1px solid rgba(196,105,74,0.15); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(8px); }
+  nav button { flex: 1; padding: 13px 4px; background: none; border: none; color: var(--ink-light); font-family: 'Josefin Sans', sans-serif; font-size: 12px; font-weight: 400; letter-spacing: .05em; text-transform: uppercase; cursor: pointer; transition: all .2s; border-bottom: 2px solid transparent; }
+  nav button.active { color: var(--terracotta); border-bottom-color: var(--terracotta); }
+  .page { display: none; padding: 20px 16px; max-width: 480px; margin: 0 auto; }
+  .page.active { display: block; }
+  .header { margin-bottom: 24px; }
+  .header h1 { font-family: 'Caveat', cursive; font-size: 36px; font-weight: 500; color: var(--ink); line-height: 1.1; }
+  .header h1 span { color: var(--terracotta); }
+  .header p { font-family: 'Josefin Sans', sans-serif; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-light); margin-top: 6px; }
+  .day-type { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .day-btn { padding: 8px 14px; border-radius: 30px; border: 1.5px solid rgba(196,105,74,0.3); background: var(--warm-white); color: var(--ink-light); font-family: 'Josefin Sans', sans-serif; font-size: 12px; letter-spacing: .02em; cursor: pointer; transition: all .2s; }
+  .day-btn.active { background: var(--terracotta); color: white; border-color: var(--terracotta); }
+  .objetivo { background: var(--warm-white); border: 1px solid rgba(196,105,74,0.15); border-radius: 16px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 16px rgba(61,58,53,0.05); }
+  .objetivo-title { font-family: 'Josefin Sans', sans-serif; font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 12px; }
+  .bloques-row { display: flex; gap: 8px; }
+  .bloque-item { flex: 1; text-align: center; }
+  .bloque-bar-wrap { height: 4px; background: var(--cream-dark); border-radius: 3px; margin: 5px 0; overflow: hidden; }
+  .bloque-bar { height: 100%; border-radius: 3px; transition: width .4s ease; }
+  .bloque-label { font-family: 'Josefin Sans', sans-serif; font-size: 11px; color: var(--ink-light); text-transform: uppercase; letter-spacing: .03em; }
+  .bloque-count { font-size: 20px; font-family: 'Caveat', cursive; font-weight: 600; color: var(--ink); }
+  .bloque-count.over { color: var(--terracotta); }
+  .bloque-count.ok { color: var(--sage-dark); }
+  .bloque-total { font-family: 'Josefin Sans', sans-serif; font-size: 11px; color: var(--ink-light); }
+  .comida-section { margin-bottom: 14px; }
+  .comida-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; cursor: pointer; border-bottom: 1px solid rgba(196,105,74,0.12); }
+  .comida-title { font-family: 'Caveat', cursive; font-size: 22px; font-weight: 500; color: var(--ink); }
+  .comida-mini { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+  .mini-badge { font-family: 'Josefin Sans', sans-serif; font-size: 11px; padding: 3px 7px; border-radius: 8px; font-weight: 400; letter-spacing: .02em; }
+  .comida-body { display: none; }
+  .comida-body.open { display: block; }
+  .receta-list { display: flex; flex-direction: column; gap: 8px; padding: 10px 0 4px; }
+  .receta-card { background: var(--warm-white); border: 1px solid rgba(196,105,74,0.15); border-radius: 12px; padding: 12px 14px; cursor: pointer; transition: all .2s; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 8px rgba(61,58,53,0.04); }
+  .receta-card.selected { border-color: var(--terracotta); background: rgba(196,105,74,0.06); }
+  .receta-name { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 500; color: var(--ink); }
+  .receta-badges { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+  .badge { font-family: 'Josefin Sans', sans-serif; font-size: 11px; padding: 3px 7px; border-radius: 6px; font-weight: 400; letter-spacing: .02em; }
+  .badge-p { background: rgba(196,105,74,.22); color: #8c3a20; }
+  .badge-c { background: rgba(176,120,40,.22); color: #7a5a10; }
+  .badge-g { background: rgba(80,115,65,.22); color: #2e5a28; }
+  .badge-f { background: rgba(148,72,108,.22); color: #7a3060; }
+  .badge-v { background: rgba(38,108,108,.22); color: #1a5c5c; }
+  .receta-check { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid rgba(196,105,74,0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; transition: all .2s; color: white; }
+  .receta-card.selected .receta-check { background: var(--terracotta); border-color: var(--terracotta); }
+  .chevron { transition: transform .2s; display: inline-block; color: var(--ink-light); font-size: 16px; }
+  .chevron.open { transform: rotate(90deg); }
+  .ejercicio-box { background: var(--warm-white); border: 1px solid rgba(196,105,74,0.15); border-radius: 16px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 16px rgba(61,58,53,0.05); }
+  .ejercicio-title { font-family: 'Josefin Sans', sans-serif; font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 10px; }
+  .ejercicio-tipos { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .ej-btn { padding: 8px 14px; border-radius: 30px; border: 1.5px solid rgba(196,105,74,0.25); background: var(--cream); color: var(--ink-light); font-family: 'Josefin Sans', sans-serif; font-size: 12px; cursor: pointer; transition: all .2s; }
+  .ej-btn.active { background: var(--sage-dark); color: white; border-color: var(--sage-dark); }
+  .ej-notas { width: 100%; padding: 10px 14px; background: var(--cream); border: 1.5px solid rgba(196,105,74,0.2); border-radius: 10px; color: var(--ink); font-family: 'Cormorant Garamond', serif; font-size: 15px; resize: none; outline: none; }
+  .ej-notas:focus { border-color: var(--terracotta); }
+  .ej-save { margin-top: 8px; padding: 10px 24px; background: var(--sage-dark); color: white; border: none; border-radius: 30px; font-family: 'Josefin Sans', sans-serif; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; cursor: pointer; }
+  .semana-grid { display: flex; flex-direction: column; gap: 10px; }
+  .dia-card { background: var(--warm-white); border: 1px solid rgba(196,105,74,0.15); border-radius: 14px; padding: 14px; box-shadow: 0 2px 12px rgba(61,58,53,0.04); }
+  .dia-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .dia-name { font-family: 'Caveat', cursive; font-size: 20px; font-weight: 500; color: var(--ink); }
+  .dia-type-badge { font-family: 'Josefin Sans', sans-serif; font-size: 12px; padding: 4px 11px; border-radius: 20px; background: var(--cream-dark); color: var(--ink-light); letter-spacing: .02em; }
+  .dia-bloques { display: flex; gap: 5px; }
+  .dia-bloque { flex: 1; text-align: center; background: var(--cream); border-radius: 8px; padding: 6px 3px; }
+  .dia-bloque .v { font-size: 17px; font-family: 'Caveat', cursive; }
+  .dia-bloque .l { font-family: 'Josefin Sans', sans-serif; font-size: 10px; color: var(--ink-light); text-transform: uppercase; }
+  .dia-ejercicio { margin-top: 8px; font-family: 'Cormorant Garamond', serif; font-size: 14px; color: var(--sage-dark); padding-top: 6px; border-top: 1px solid rgba(196,105,74,0.1); font-style: italic; }
+  .search-box { width: 100%; padding: 12px 16px; background: var(--warm-white); border: 1.5px solid rgba(196,105,74,0.25); border-radius: 30px; color: var(--ink); font-family: 'Josefin Sans', sans-serif; font-size: 13px; letter-spacing: .02em; margin-bottom: 14px; outline: none; }
+  .search-box::placeholder { color: var(--ink-light); }
+  .search-box:focus { border-color: var(--terracotta); }
+  .add-receta-btn { width: 100%; padding: 14px; background: var(--terracotta); color: white; border: none; border-radius: 30px; font-family: 'Josefin Sans', sans-serif; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; margin-bottom: 14px; transition: all .2s; }
+  .add-receta-btn:hover { background: var(--terracotta-dark); }
+  .all-recetas { display: flex; flex-direction: column; gap: 8px; }
+  .receta-full { background: var(--warm-white); border: 1px solid rgba(196,105,74,0.15); border-radius: 12px; padding: 14px; box-shadow: 0 1px 8px rgba(61,58,53,0.04); }
+  .receta-full-header { display: flex; justify-content: space-between; align-items: flex-start; }
+  .receta-full-name { font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 500; margin-bottom: 3px; color: var(--ink); }
+  .receta-full-cat { font-family: 'Josefin Sans', sans-serif; font-size: 11px; color: var(--ink-light); text-transform: uppercase; letter-spacing: .04em; }
+  .delete-btn { background: none; border: none; color: var(--ink-light); font-size: 16px; cursor: pointer; padding: 0 4px; opacity: .6; }
+  .filter-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .filter-btn { padding: 7px 14px; border-radius: 20px; border: 1.5px solid rgba(196,105,74,0.25); background: var(--warm-white); color: var(--ink-light); font-family: 'Josefin Sans', sans-serif; font-size: 12px; letter-spacing: .02em; cursor: pointer; transition: all .2s; }
+  .prog-section { margin-bottom: 20px; }
+  .prog-section-title { font-family: 'Josefin Sans', sans-serif; font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 12px; }
+  .medidas-form { background: var(--warm-white); border: 1px solid rgba(196,105,74,0.15); border-radius: 16px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 16px rgba(61,58,53,0.05); }
+  .medidas-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+  .medida-inp label { display: block; font-family: 'Josefin Sans', sans-serif; font-size: 12px; color: var(--ink-light); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 5px; text-align:center; }
+  .medida-inp input { width: 100%; padding: 10px 6px; background: var(--cream); border: 1.5px solid rgba(196,105,74,0.2); border-radius: 10px; color: var(--ink); font-family: 'Caveat', cursive; font-size: 18px; text-align: center; outline: none; }
+  .medida-inp input:focus { border-color: var(--terracotta); }
+  .med-save { width: 100%; padding: 12px; background: var(--terracotta); color: white; border: none; border-radius: 30px; font-family: 'Josefin Sans', sans-serif; font-size: 12px; letter-spacing: .05em; text-transform: uppercase; cursor: pointer; transition: all .2s; }
+  .grafica-wrap { background: var(--warm-white); border: 1px solid rgba(196,105,74,0.15); border-radius: 16px; padding: 16px; margin-bottom: 14px; box-shadow: 0 2px 12px rgba(61,58,53,0.04); }
+  .grafica-legend { display: flex; gap: 12px; font-family: 'Josefin Sans', sans-serif; font-size: 12px; color: var(--ink-light); margin-bottom: 8px; letter-spacing: .02em; }
+  .leg-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+  svg.chart { width: 100%; overflow: visible; display: block; }
+  .cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .cal-nav button { background: var(--cream-dark); border: none; color: var(--ink); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-family: 'Josefin Sans', sans-serif; font-size: 14px; }
+  .cal-nav span { font-family: 'Caveat', cursive; font-size: 22px; color: var(--ink); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-header { text-align: center; font-family: 'Josefin Sans', sans-serif; font-size: 11px; color: var(--ink-light); text-transform: uppercase; padding: 4px 0; letter-spacing: .02em; }
+  .cal-day { aspect-ratio: 1; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; background: var(--cream-dark); }
+  .cal-day.empty { background: transparent; cursor: default; }
+  .cal-day.today { border: 1.5px solid var(--terracotta); }
+  .cal-day.has-data { background: var(--cream); }
+  .cal-day .cal-num { font-family: 'Josefin Sans', sans-serif; font-size: 12px; color: var(--ink); }
+  .cal-day .cal-dot { width: 5px; height: 5px; border-radius: 50%; margin-top: 2px; }
+  .cal-day .cal-ej { font-size: 8px; }
+  .day-detail { background: var(--warm-white); border: 1px solid rgba(196,105,74,0.15); border-radius: 14px; padding: 16px; margin-top: 14px; display: none; box-shadow: 0 2px 12px rgba(61,58,53,0.05); }
+  .day-detail.show { display: block; }
+  .day-detail-title { font-family: 'Caveat', cursive; font-size: 22px; font-weight: 500; color: var(--ink); margin-bottom: 12px; }
+  .detail-bloques { display: flex; gap: 6px; margin-bottom: 8px; }
+  .detail-bloque { flex: 1; text-align: center; background: var(--cream); border-radius: 8px; padding: 6px; }
+  .detail-bloque .dv { font-size: 18px; font-family: 'Caveat', cursive; }
+  .detail-bloque .dl { font-family: 'Josefin Sans', sans-serif; font-size: 10px; color: var(--ink-light); text-transform: uppercase; }
+  .detail-bloques-full { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+  .detail-bloque-full { background: var(--cream); border-radius: 10px; padding: 10px 12px; }
+  .detail-bloque-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .detail-bloque-label { font-family: 'Josefin Sans', sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-light); }
+  .detail-bloque-vals { font-family: 'Caveat', cursive; font-size: 22px; font-weight: 600; }
+  .detail-bloque-obj { font-family: 'Josefin Sans', sans-serif; font-size: 12px; color: var(--ink-light); font-weight: 400; }
+  .detail-bar-wrap { height: 5px; background: rgba(196,105,74,0.12); border-radius: 3px; overflow: hidden; }
+  .detail-bar { height: 100%; border-radius: 3px; transition: width .4s ease; }
+  .detail-ejercicio { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-style: italic; color: var(--sage-dark); padding-top: 8px; border-top: 1px solid rgba(196,105,74,0.1); margin-top: 6px; }
+  .detail-medidas { display: flex; gap: 10px; padding-top: 8px; border-top: 1px solid rgba(196,105,74,0.1); margin-top: 6px; }
+  .detail-medida { flex: 1; text-align: center; }
+  .detail-medida .dm { font-family: 'Caveat', cursive; font-size: 20px; color: var(--ink); }
+  .detail-medida .dl { font-family: 'Josefin Sans', sans-serif; font-size: 10px; color: var(--ink-light); text-transform: uppercase; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(61,58,53,.6); z-index: 200; align-items: flex-end; backdrop-filter: blur(4px); }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--cream); border-radius: 24px 24px 0 0; padding: 28px 24px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal h2 { font-family: 'Caveat', cursive; font-size: 30px; font-weight: 500; color: var(--ink); margin-bottom: 20px; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-family: 'Josefin Sans', sans-serif; font-size: 12px; color: var(--ink-light); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+  .form-group input, .form-group select { width: 100%; padding: 12px 16px; background: var(--warm-white); border: 1.5px solid rgba(196,105,74,0.25); border-radius: 30px; color: var(--ink); font-family: 'Josefin Sans', sans-serif; font-size: 13px; outline: none; }
+  .form-group input:focus, .form-group select:focus { border-color: var(--terracotta); box-shadow: 0 0 0 3px rgba(196,105,74,0.1); }
+  .bloques-input { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .bloque-inp { text-align: center; }
+  .bloque-inp label { display: block; font-size: 11px; margin-bottom: 4px; }
+  .bloque-inp input { padding: 10px 4px; text-align: center; border-radius: 12px; }
+  .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-cancel { flex: 1; padding: 14px; background: var(--cream-dark); border: none; border-radius: 30px; color: var(--ink-light); font-family: 'Josefin Sans', sans-serif; font-size: 12px; letter-spacing: .06em; cursor: pointer; }
+  .btn-save { flex: 2; padding: 14px; background: var(--terracotta); border: none; border-radius: 30px; color: white; font-family: 'Josefin Sans', sans-serif; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+  .empty { text-align: center; font-family: 'Cormorant Garamond', serif; color: var(--ink-light); padding: 28px; font-size: 16px; font-style: italic; }
+</style>
+</head>
+<body>
+<nav>
+  <button class="active" onclick="showPage('hoy',this)">Hoy</button>
+  <button onclick="showPage('semana',this)">Semana</button>
+  <button onclick="showPage('progreso',this)">Progreso</button>
+  <button onclick="showPage('recetas',this)">Recetas</button>
+  <button onclick="toggleBackup()">⚙</button>
+</nav>
+
+<!-- BACKUP BAR -->
+<div id="backup-bar" style="display:none;background:var(--cream-dark);border-bottom:1px solid rgba(196,105,74,0.15);padding:12px 16px;max-width:480px;margin:0 auto;position:relative;z-index:1;">
+  <div style="font-family:'Josefin Sans',sans-serif;font-size:10px;color:var(--ink-light);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Datos · Backup</div>
+  <div style="display:flex;gap:8px">
+    <button onclick="exportarJSON()" style="flex:1;padding:10px;background:var(--sage-dark);color:white;border:none;border-radius:30px;font-family:'Josefin Sans',sans-serif;font-size:11px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">⬇ Exportar</button>
+    <label style="flex:1;padding:10px;background:var(--warm-white);border:1.5px solid rgba(196,105,74,0.25);border-radius:30px;font-family:'Josefin Sans',sans-serif;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-light);text-align:center;cursor:pointer">
+      ⬆ Importar<input type="file" accept=".json" onchange="importarJSON(event)" style="display:none"/>
+    </label>
+    <button onclick="toggleBackup()" style="padding:10px 14px;background:var(--cream-dark);border:1px solid rgba(196,105,74,0.2);border-radius:20px;color:var(--ink-light);font-size:14px;cursor:pointer">✕</button>
+  </div>
+  <div id="backup-msg" style="font-family:'Josefin Sans',sans-serif;font-size:11px;color:var(--sage-dark);margin-top:8px;display:none"></div>
+</div>
+
+<!-- HOY -->
+<div class="page active" id="page-hoy">
+  <div class="header"><h1>Mis <span>Bloques</span></h1><p id="fecha-hoy"></p></div>
+  <div class="day-type">
+    <button class="day-btn" onclick="setDayType('fuerza',this)">💪 Fuerza</button>
+    <button class="day-btn" onclick="setDayType('boxeo',this)">🥊 Boxeo</button>
+    <button class="day-btn" onclick="setDayType('descanso',this)">😴 Descanso</button>
+    <button class="day-btn" onclick="setDayType('trekking',this)">🏔️ Trekking</button>
+  </div>
+  <div class="objetivo">
+    <div class="objetivo-title">Progreso · Objetivo 13 bloques</div>
+    <div class="bloques-row" id="bloques-progress"></div>
+  </div>
+  <div id="comidas-container"></div>
+  <div class="ejercicio-box">
+    <div class="ejercicio-title">Ejercicio de hoy</div>
+    <div class="ejercicio-tipos">
+      <button class="ej-btn" onclick="toggleEjercicio('Fuerza',this)">💪 Fuerza</button>
+      <button class="ej-btn" onclick="toggleEjercicio('Boxeo',this)">🥊 Boxeo</button>
+      <button class="ej-btn" onclick="toggleEjercicio('Trekking',this)">🏔️ Trekking</button>
+      <button class="ej-btn" onclick="toggleEjercicio('Cardio',this)">🏃 Cardio</button>
+      <button class="ej-btn" onclick="toggleEjercicio('Descanso',this)">😴 Descanso</button>
+    </div>
+    <textarea class="ej-notas" id="ej-notas" rows="2" placeholder="Notas del entreno (ej: 5x5 sentadilla, 3 rondas boxeo...)"></textarea>
+    <button class="ej-save" onclick="saveEjercicio()">Guardar ejercicio</button>
+  </div>
+</div>
+
+<!-- SEMANA -->
+<div class="page" id="page-semana">
+  <div class="header"><h1>Esta <span>Semana</span></h1><p>Bloques y ejercicio por día</p></div>
+  <div class="semana-grid" id="semana-grid"></div>
+</div>
+
+<!-- PROGRESO -->
+<div class="page" id="page-progreso">
+  <div class="header"><h1>Mi <span>Progreso</span></h1><p>Evolución mensual</p></div>
+  <div class="prog-section">
+    <div class="prog-section-title">Registrar medidas de hoy</div>
+    <div class="medidas-form">
+      <div class="medidas-row">
+        <div class="medida-inp"><label>Peso (kg)</label><input id="m-peso" type="number" step="0.1" placeholder="78.0"/></div>
+        <div class="medida-inp"><label>Cintura (cm)</label><input id="m-cintura" type="number" step="0.5" placeholder="85"/></div>
+        <div class="medida-inp"><label>Brazo (cm)</label><input id="m-brazo" type="number" step="0.5" placeholder="35"/></div>
+      </div>
+      <button class="med-save" onclick="saveMedidas()">Guardar medidas</button>
+    </div>
+  </div>
+  <div class="prog-section">
+    <div class="prog-section-title">Evolución del peso</div>
+    <div class="grafica-wrap"><svg class="chart" id="chart-peso" height="110"></svg></div>
+  </div>
+  <div class="prog-section">
+    <div class="prog-section-title">Cintura y Brazo</div>
+    <div class="grafica-wrap">
+      <div class="grafica-legend">
+        <span><span class="leg-dot" style="background:var(--c)"></span>Cintura</span>
+        <span><span class="leg-dot" style="background:var(--g)"></span>Brazo</span>
+      </div>
+      <svg class="chart" id="chart-medidas" height="110"></svg>
+    </div>
+  </div>
+  <div class="prog-section">
+    <div class="prog-section-title">Calendario de bloques</div>
+    <div class="grafica-wrap" style="padding:14px">
+      <div class="cal-nav">
+        <button onclick="calPrev()">‹</button>
+        <span id="cal-titulo"></span>
+        <button onclick="calNext()">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <div class="day-detail" id="day-detail"></div>
+  </div>
+</div>
+
+<!-- RECETAS -->
+<div class="page" id="page-recetas">
+  <div class="header"><h1>Mis <span>Recetas</span></h1><p>Biblioteca de recetas</p></div>
+  <button class="add-receta-btn" onclick="openModal()">+ Añadir receta</button>
+  <input class="search-box" placeholder="Buscar receta..." oninput="renderRecetasList(this.value)"/>
+  <div class="filter-row">
+    <button class="filter-btn" style="background:var(--surface2);color:var(--text)" onclick="setFilter('all',this)">Todas</button>
+    <button class="filter-btn" onclick="setFilter('desayuno',this)">Desayuno</button>
+    <button class="filter-btn" onclick="setFilter('comida',this)">Comida</button>
+    <button class="filter-btn" onclick="setFilter('cena',this)">Cena</button>
+  </div>
+  <div class="all-recetas" id="recetas-list"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <h2>Nueva Receta</h2>
+    <div class="form-group"><label>Nombre</label><input id="r-nombre" type="text" placeholder="Ej: Pollo con arroz"/></div>
+    <div class="form-group"><label>Ingredientes (con gramos)</label><input id="r-ingredientes" type="text" placeholder="Ej: Pollo (140g), Arroz (ración), Frutos rojos (160g)"/></div>
+    <div class="form-group"><label>Categoría</label>
+      <select id="r-cat"><option value="desayuno">Desayuno</option><option value="comida">Comida</option><option value="cena">Cena</option><option value="snack">Snack</option></select>
+    </div>
+    <div class="form-group"><label>Bloques</label>
+      <div class="bloques-input">
+        <div class="bloque-inp"><label style="color:var(--p)">P</label><input id="r-p" type="number" step="0.25" min="0" value="0"/></div>
+        <div class="bloque-inp"><label style="color:var(--c)">C</label><input id="r-c" type="number" step="0.25" min="0" value="0"/></div>
+        <div class="bloque-inp"><label style="color:var(--g)">G</label><input id="r-g" type="number" step="0.25" min="0" value="0"/></div>
+        <div class="bloque-inp"><label style="color:var(--f)">F</label><input id="r-f" type="number" step="0.25" min="0" value="0"/></div>
+        <div class="bloque-inp"><label style="color:var(--v)">V</label><input id="r-v" type="number" step="0.25" min="0" value="0"/></div>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveReceta()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const OBJETIVO={p:4,c:3,g:2,f:2,v:2};
+const COMIDAS=['Desayuno','Comida','Cena'];
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS_S=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+const DEFAULT_RECETAS=[
+  {id:1,nombre:'D1 · SNR',cat:'desayuno',ingredientes:'Clara (33g) + 1 huevo + Jamón (15g) + Leche (295g) + Yogur 0% + Manzana',p:1.6,c:0.5,g:1,f:1,v:0},
+  {id:2,nombre:'D2 · C/P con pan',cat:'desayuno',ingredientes:'Clara (33g) + 1 huevo + Jamón (15g) + Leche (295g) + Yogur 0% + Manzana + Pan integral (40g)',p:1.6,c:1.3,g:1,f:1,v:0},
+  {id:3,nombre:'D3 · C/P solo claras',cat:'desayuno',ingredientes:'2 Claras + Jamón (15g) + Leche (295g) + Yogur 0% + Manzana + Pan integral (40g)',p:1.3,c:1.3,g:0,f:1,v:0},
+  {id:4,nombre:'D4 · Finde (jamón+pan+fresas)',cat:'desayuno',ingredientes:'Pan (40g) + Jamón (45g) + Leche + Yogur 0% + Fresas (150g)',p:1,c:1,g:0.3,f:0.5,v:0},
+  {id:20,nombre:'D5 · Granola (leche+yogur+fruta+granola)',cat:'desayuno',ingredientes:'Leche (295g) + Yogur 0% + Frutos rojos (160g) + Manzana (200g) + Granola (30g)',p:1,c:0.75,g:1,f:2,v:0},
+  {id:5,nombre:'CD1 · Pollo+arroz+verdura',cat:'comida',ingredientes:'Pollo (140g) + Arroz (ración cocida) + Verdura/Puré (V1) + Frutos rojos (160g)',p:1,c:1,g:0,f:1,v:1},
+  {id:6,nombre:'CD2 · Pasta+atún+mozzarella',cat:'comida',ingredientes:'Pasta (ración cocida) + Atún (90g) + Tomate (V1) + Mozzarella (60g) + Fresas (150g)',p:1,c:1,g:1,f:0.5,v:1},
+  {id:7,nombre:'CD3 · Secreto+verdura',cat:'comida',ingredientes:'Secreto ibérico (130g) + Verdura/Puré (V1) + Fresas (150g)',p:1,c:0,g:1,f:0.5,v:1},
+  {id:8,nombre:'CD4 · Legumbre+atún',cat:'comida',ingredientes:'Legumbre cocida (200g) + Atún (90g) + Tomate (V1) + Tomate seco + Frutos rojos (160g)',p:1,c:1,g:0.5,f:1,v:1},
+  {id:9,nombre:'CD5 · Guisantes+jamón',cat:'comida',ingredientes:'Guisantes (280g) + Jamón (45g) + Puré (V1) + Frutos rojos (160g)',p:1,c:1,g:0.3,f:1,v:1},
+  {id:10,nombre:'CD6 · Pollo+patata+AOVE',cat:'comida',ingredientes:'Pollo (140g) + Patata (210g) + Puré (V1) + AOVE (2g) + Frutos rojos (160g)',p:1,c:1,g:0.2,f:1,v:1},
+  {id:11,nombre:'CD7 · Fajita+atún+parmesano',cat:'comida',ingredientes:'Fajita integral + Atún (90g) + Parmesano (25g) + Verdura/Salsa + Frutos rojos (160g)',p:1,c:1,g:1,f:1,v:1},
+  {id:12,nombre:'C1 · Atún+pan+mozzarella+yogur',cat:'cena',ingredientes:'Tomate (V1) + Pan (40g) + Atún (90g) + Mozzarella (30g) + Tomate seco + Frutos rojos (160g) + Yogur (125g)',p:1,c:0.8,g:1,f:1,v:1},
+  {id:13,nombre:'C2 · Quiche/fajita+pollo+huevo+yogur',cat:'cena',ingredientes:'Fajita integral + 1 Huevo + Queso light + Pollo (70g) + Salsa tomate (V1) + Frutos rojos (160g) + Yogur (125g)',p:1.5,c:1.3,g:1.5,f:1,v:1},
+  {id:14,nombre:'C3 · Dorada+patata+yogur',cat:'cena',ingredientes:'Dorada (190g) + Patata (210g) + Frutos rojos (160g) + Yogur (125g)',p:1.3,c:1.3,g:0,f:1,v:0},
+  {id:15,nombre:'C4 · Sardina+patata+yogur',cat:'cena',ingredientes:'Sardina/Anchoa (170g) + Patata (210g) + Frutos rojos (160g) + Yogur (125g)',p:1.3,c:1.3,g:1,f:1,v:0},
+  {id:16,nombre:'C5 · Tortilla claras+pavo+pan',cat:'cena',ingredientes:'Claras + Pavo + Pan (40g) + Tomate seco + Frutos rojos (160g) + Yogur (125g)',p:1.1,c:0.8,g:0.5,f:1,v:0},
+  {id:17,nombre:'C6 · Burger ternera+pan+guacamole',cat:'cena',ingredientes:'Burger ternera (130g) + Pan (80g) + Guacamole (30g) + Parmesano (12.5g) + Yogur (125g) + Frutos rojos (160g)',p:1.3,c:1,g:2.3,f:1,v:0},
+  {id:18,nombre:'C7 · Burger pollo+pan+guacamole',cat:'cena',ingredientes:'Burger pollo (130g) + Pan (80g) + Guacamole (30g) + Parmesano (12.5g) + Yogur (125g) + Frutos rojos (160g)',p:1.3,c:1,g:1.3,f:1,v:0},
+  {id:19,nombre:'C8 · Tortilla patata+pan',cat:'cena',ingredientes:'Tortilla de patata (300g) + Pan (40g)',p:0.6,c:2.2,g:2.5,f:0,v:0},
+  {id:21,nombre:'C9 · Pizza casera',cat:'cena',ingredientes:'Harina Caputo 00 (170g) + Tomate natural (60g) + Parmesano (40g) + Jamón serrano (45g)',p:1,c:2,g:1.75,f:0,v:0.5},
+];
+
+let state={recetas:[],hoy:{tipo:'fuerza',seleccionadas:{Desayuno:[],Comida:[],Cena:[]},ejercicio:[],ejNotas:''},historial:{},nextId:100};
+let currentFilter='all', calYear, calMonth;
+
+function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+
+const RECETAS_VERSION = 21; // incrementar al añadir recetas
+
+function loadState(){
+  try{
+    const s=localStorage.getItem('galancho-v2');
+    if(s){
+      const p=JSON.parse(s);
+      state={...state,...p};
+      if(!state.historial)state.historial={};
+      // Fusionar recetas nuevas si la versión guardada es anterior
+      const savedVersion = state.recetasVersion || 0;
+      if(savedVersion < RECETAS_VERSION){
+        const savedIds = new Set(state.recetas.map(r=>r.id));
+        const nuevas = DEFAULT_RECETAS.filter(r=>!savedIds.has(r.id));
+        if(nuevas.length) state.recetas = [...state.recetas, ...nuevas];
+        state.recetasVersion = RECETAS_VERSION;
+        // Guardar inmediatamente la versión actualizada
+        try{localStorage.setItem('galancho-v2', JSON.stringify(state));}catch(e){}
+      }
+    }
+    else{state.recetas=DEFAULT_RECETAS;state.recetasVersion=RECETAS_VERSION;}
+  }catch(e){state.recetas=DEFAULT_RECETAS;state.recetasVersion=RECETAS_VERSION;}
+}
+function saveState(){
+  const key=todayKey();
+  if(!state.historial[key])state.historial[key]={};
+  state.historial[key]={...state.historial[key],seleccionadas:state.hoy.seleccionadas,ejercicio:state.hoy.ejercicio,ejNotas:state.hoy.ejNotas,tipo:state.hoy.tipo};
+  try{localStorage.setItem('galancho-v2',JSON.stringify(state));}catch(e){}
+}
+
+function calcTotales(sel){
+  const t={p:0,c:0,g:0,f:0,v:0};
+  Object.values(sel||{}).forEach(ids=>(ids||[]).forEach(id=>{const r=state.recetas.find(x=>x.id===id);if(r){t.p+=r.p;t.c+=r.c;t.g+=r.g;t.f+=r.f;t.v+=r.v;}}));
+  return t;
+}
+function fmt(n){return n%1===0?n:parseFloat(n.toFixed(2));}
+
+// HOY
+function renderBloques(tot){
+  const keys=['p','c','g','f','v'],labels=['Prot','Carb','Gras','Frut','Verd'],colors=['var(--p)','var(--c)','var(--g)','var(--f)','var(--v)'];
+  document.getElementById('bloques-progress').innerHTML=keys.map((k,i)=>{
+    const val=tot[k],max=OBJETIVO[k],pct=Math.min(100,(val/max)*100),cls=val>max?'over':val>=max?'ok':'';
+    return `<div class="bloque-item"><div class="bloque-count ${cls}">${fmt(val)}</div><div class="bloque-bar-wrap"><div class="bloque-bar" style="width:${pct}%;background:${colors[i]}"></div></div><div class="bloque-label">${labels[i]}</div><div class="bloque-total">/${max}</div></div>`;
+  }).join('');
+}
+
+function renderComidas(){
+  renderBloques(calcTotales(state.hoy.seleccionadas));
+  const colors=['var(--p)','var(--c)','var(--g)','var(--f)','var(--v)'],keys=['p','c','g','f','v'];
+  document.getElementById('comidas-container').innerHTML=COMIDAS.map(comida=>{
+    const cat=comida.toLowerCase();
+    const recetasCat=state.recetas.filter(r=>r.cat===cat);
+    const selIds=state.hoy.seleccionadas[comida]||[];
+    const st={p:0,c:0,g:0,f:0,v:0};
+    selIds.forEach(id=>{const r=state.recetas.find(x=>x.id===id);if(r){st.p+=r.p;st.c+=r.c;st.g+=r.g;st.f+=r.f;st.v+=r.v;}});
+    const mini=keys.map((k,i)=>st[k]>0?`<span class="mini-badge" style="background:${colors[i]}22;color:${colors[i]}">${fmt(st[k])}${k.toUpperCase()}</span>`:'').join('');
+    const recetasHtml=recetasCat.map(r=>{
+      const sel=selIds.includes(r.id);
+      const b=[r.p>0?`<span class="badge badge-p">${fmt(r.p)}P</span>`:'',r.c>0?`<span class="badge badge-c">${fmt(r.c)}C</span>`:'',r.g>0?`<span class="badge badge-g">${fmt(r.g)}G</span>`:'',r.f>0?`<span class="badge badge-f">${fmt(r.f)}F</span>`:'',r.v>0?`<span class="badge badge-v">${fmt(r.v)}V</span>`:'' ].join('');
+      return `<div class="receta-card ${sel?'selected':''}" onclick="toggleReceta('${comida}',${r.id})"><div><div class="receta-name">${r.nombre}</div>${r.ingredientes?`<div style="font-family:Cormorant Garamond,serif;font-size:13px;color:var(--ink-light);margin:3px 0 4px;font-style:italic;line-height:1.4">${r.ingredientes}</div>`:''}<div class="receta-badges">${b}</div></div><div class="receta-check">${sel?'✓':''}</div></div>`;
+    }).join('');
+    return `<div class="comida-section"><div class="comida-header" onclick="toggleComida('${comida}')"><span class="comida-title">${comida}</span><div style="display:flex;align-items:center;gap:8px"><div class="comida-mini">${mini}</div><span class="chevron" id="chev-${comida}">›</span></div></div><div class="comida-body" id="body-${comida}"><div class="receta-list">${recetasHtml}</div></div></div>`;
+  }).join('');
+  (state.hoy.ejercicio||[]).forEach(e=>{document.querySelectorAll('.ej-btn').forEach(b=>{if(b.textContent.includes(e))b.classList.add('active');});});
+  document.getElementById('ej-notas').value=state.hoy.ejNotas||'';
+}
+
+function toggleComida(n){document.getElementById(`body-${n}`).classList.toggle('open');document.getElementById(`chev-${n}`).classList.toggle('open');}
+function toggleReceta(comida,id){
+  const sel=state.hoy.seleccionadas[comida]||[];
+  const idx=sel.indexOf(id);
+  if(idx===-1)sel.push(id);else sel.splice(idx,1);
+  state.hoy.seleccionadas[comida]=sel;
+  saveState();renderComidas();
+  document.getElementById(`body-${comida}`).classList.add('open');
+  document.getElementById(`chev-${comida}`).classList.add('open');
+}
+function setDayType(tipo,btn){state.hoy.tipo=tipo;document.querySelectorAll('.day-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');saveState();}
+function toggleEjercicio(tipo,btn){btn.classList.toggle('active');if(!state.hoy.ejercicio)state.hoy.ejercicio=[];const idx=state.hoy.ejercicio.indexOf(tipo);if(idx===-1)state.hoy.ejercicio.push(tipo);else state.hoy.ejercicio.splice(idx,1);}
+function saveEjercicio(){state.hoy.ejNotas=document.getElementById('ej-notas').value;saveState();alert('Ejercicio guardado ✓');}
+
+// SEMANA
+function renderSemana(){
+  const dias=[{n:'Lunes',t:'fuerza',e:'💪',o:1},{n:'Martes',t:'boxeo',e:'🥊',o:2},{n:'Miércoles',t:'fuerza',e:'💪',o:3},{n:'Jueves',t:'boxeo',e:'🥊',o:4},{n:'Viernes',t:'descanso',e:'😴',o:5},{n:'Sábado',t:'trekking',e:'🏔️',o:6},{n:'Domingo',t:'trekking',e:'🏔️',o:0}];
+  const keys=['p','c','g','f','v'],colors=['var(--p)','var(--c)','var(--g)','var(--f)','var(--v)'],labels=['P','C','G','F','V'];
+  const today=new Date(),dow=today.getDay();
+  document.getElementById('semana-grid').innerHTML=dias.map(dia=>{
+    const d=new Date(today);d.setDate(today.getDate()+(dia.o-dow));
+    const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const saved=state.historial[key];
+    const tot=saved?calcTotales(saved.seleccionadas||{}):{p:0,c:0,g:0,f:0,v:0};
+    const ej=saved?.ejercicio?.join(', ')||'';
+    const ejN=saved?.ejNotas||'';
+    const bh=keys.map((k,i)=>`<div class="dia-bloque"><div class="v" style="color:${tot[k]>OBJETIVO[k]?'var(--over)':colors[i]}">${fmt(tot[k])}</div><div class="l" style="color:${colors[i]}">${labels[i]}</div></div>`).join('');
+    return `<div class="dia-card"><div class="dia-card-header"><span class="dia-name">${dia.n} ${d.getDate()}</span><span class="dia-type-badge">${dia.e} ${dia.t}</span></div><div class="dia-bloques">${bh}</div>${ej?`<div class="dia-ejercicio">🏋️ ${ej}${ejN?' · '+ejN:''}</div>`:''}</div>`;
+  }).join('');
+}
+
+// PROGRESO
+function saveMedidas(){
+  const key=todayKey();
+  if(!state.historial[key])state.historial[key]={seleccionadas:{},ejercicio:[],ejNotas:'',tipo:'descanso'};
+  state.historial[key].medidas={peso:parseFloat(document.getElementById('m-peso').value)||null,cintura:parseFloat(document.getElementById('m-cintura').value)||null,brazo:parseFloat(document.getElementById('m-brazo').value)||null};
+  saveState();renderGraficas();alert('Medidas guardadas ✓');
+}
+
+function renderGraficas(){
+  const entries=Object.entries(state.historial).filter(([,v])=>v.medidas).sort(([a],[b])=>a.localeCompare(b)).slice(-20);
+  const noData='<text x="50%" y="55%" text-anchor="middle" fill="#8a8078" font-family="DM Sans, sans-serif" font-size="12">Registra medidas para ver la evolución</text>';
+  if(entries.length<2){document.getElementById('chart-peso').innerHTML=noData;document.getElementById('chart-medidas').innerHTML=noData;return;}
+  drawLine('chart-peso',entries.map(([d,v])=>({x:d.slice(5),y:v.medidas?.peso})).filter(p=>p.y!=null),'var(--p)','kg');
+  drawDual('chart-medidas',entries.map(([d,v])=>({x:d.slice(5),y:v.medidas?.cintura})).filter(p=>p.y!=null),entries.map(([d,v])=>({x:d.slice(5),y:v.medidas?.brazo})).filter(p=>p.y!=null),'var(--c)','var(--g)');
+}
+
+function drawLine(id,data,color,unit){
+  const svg=document.getElementById(id);
+  if(!data.length){svg.innerHTML='';return;}
+  const W=360,H=100;svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const vals=data.map(d=>d.y),mn=Math.min(...vals)-0.5,mx=Math.max(...vals)+0.5;
+  const pts=data.map((d,i)=>({x:20+(i/(Math.max(data.length-1,1)))*(W-40),y:H-15-((d.y-mn)/(mx-mn||1))*(H-30)}));
+  const path=pts.map((p,i)=>i===0?`M${p.x},${p.y}`:`L${p.x},${p.y}`).join(' ');
+  const area=`M${pts[0].x},${H-5} `+pts.map(p=>`L${p.x},${p.y}`).join(' ')+` L${pts[pts.length-1].x},${H-5} Z`;
+  svg.innerHTML=`<defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity=".2"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
+  <path d="${area}" fill="url(#g1)"/>
+  <path d="${path}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  ${pts.map((p,i)=>`<circle cx="${p.x}" cy="${p.y}" r="3" fill="${color}"/>${i===0||i===pts.length-1||i%Math.ceil(data.length/5)===0?`<text x="${p.x}" y="${H}" text-anchor="middle" fill="#8a8078" font-size="9" font-family="DM Sans">${data[i].x}</text>`:''}`).join('')}
+  <text x="${pts[pts.length-1].x+4}" y="${pts[pts.length-1].y+4}" fill="${color}" font-size="11" font-weight="600" font-family="DM Sans">${data[data.length-1].y}${unit}</text>`;
+}
+
+function drawDual(id,d1,d2,c1,c2){
+  const svg=document.getElementById(id);
+  const all=[...d1,...d2].map(d=>d.y);
+  if(!all.length){svg.innerHTML='';return;}
+  const W=360,H=100;svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const mn=Math.min(...all)-0.5,mx=Math.max(...all)+0.5;
+  function mkP(data){return data.map((d,i)=>({x:20+(i/(Math.max(data.length-1,1)))*(W-40),y:H-15-((d.y-mn)/(mx-mn||1))*(H-30)}));}
+  function mkPath(pts){return pts.map((p,i)=>i===0?`M${p.x},${p.y}`:`L${p.x},${p.y}`).join(' ');}
+  const p1=mkP(d1),p2=mkP(d2);
+  svg.innerHTML=`${p1.length>1?`<path d="${mkPath(p1)}" fill="none" stroke="${c1}" stroke-width="2" stroke-linecap="round"/>`:'' }
+  ${p2.length>1?`<path d="${mkPath(p2)}" fill="none" stroke="${c2}" stroke-width="2" stroke-linecap="round" stroke-dasharray="5,3"/>`:'' }
+  ${p1.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="3" fill="${c1}"/>`).join('')}
+  ${p2.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="3" fill="${c2}"/>`).join('')}
+  ${d1.length?`<text x="${p1[p1.length-1].x+4}" y="${p1[p1.length-1].y+4}" fill="${c1}" font-size="11" font-family="DM Sans">${d1[d1.length-1].y}cm</text>`:''}
+  ${d2.length?`<text x="${p2[p2.length-1].x+4}" y="${p2[p2.length-1].y+4}" fill="${c2}" font-size="11" font-family="DM Sans">${d2[d2.length-1].y}cm</text>`:''}`;
+}
+
+// CALENDARIO
+function renderCalendario(){
+  document.getElementById('cal-titulo').textContent=`${MESES[calMonth]} ${calYear}`;
+  const first=new Date(calYear,calMonth,1).getDay(),days=new Date(calYear,calMonth+1,0).getDate();
+  const keys=['p','c','g','f','v'];
+  const td=new Date();
+  let html=DIAS_S.map(d=>`<div class="cal-header">${d}</div>`).join('');
+  for(let i=0;i<first;i++)html+=`<div class="cal-day empty"></div>`;
+  for(let d=1;d<=days;d++){
+    const key=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const data=state.historial[key];
+    const isToday=td.getFullYear()===calYear&&td.getMonth()===calMonth&&td.getDate()===d;
+    const tot=data?calcTotales(data.seleccionadas||{}):null;
+    const total=tot?Object.values(tot).reduce((a,b)=>a+b,0):0;
+    const hasEj=data?.ejercicio?.length>0;
+    // Check if ALL macros meet objetivo
+    const allOk = tot && keys.every(k=>tot[k]>=OBJETIVO[k]);
+    const anyData = tot && Object.values(tot).some(v=>v>0);
+    const dot = !anyData ? 'rgba(196,105,74,0.12)' : allOk ? 'var(--ok)' : total>=6 ? 'var(--c)' : 'var(--over)';
+    const dayBg = !anyData ? '' : allOk ? 'rgba(92,122,82,0.12)' : '';
+    html+=`<div class="cal-day ${isToday?'today':''} ${anyData?'has-data':''}" style="${dayBg?'background:'+dayBg:''}" onclick="showDayDetail('${key}',${d})"><div class="cal-num">${d}</div><div class="cal-dot" style="background:${dot}"></div>${hasEj?'<div class="cal-ej">🏋️</div>':''}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML=html;
+}
+
+function showDayDetail(key,day){
+  const data=state.historial[key],detail=document.getElementById('day-detail');
+  if(!data){detail.classList.remove('show');return;}
+  const tot=calcTotales(data.seleccionadas||{});
+  const keys=['p','c','g','f','v'];
+  const labels=['Proteína','Carb','Grasa','Fruta','Verdura'];
+  const colors=['var(--p)','var(--c)','var(--g)','var(--f)','var(--v)'];
+  const bh=keys.map((k,i)=>{
+    const val=tot[k], obj=OBJETIVO[k], pct=Math.min(100,(val/obj)*100);
+    const over=val>obj, ok=val>=obj;
+    const barColor=over?'var(--over)':ok?'var(--ok)':colors[i];
+    const textColor=over?'var(--over)':ok?'var(--ok)':colors[i];
+    return `<div class="detail-bloque-full">
+      <div class="detail-bloque-header">
+        <span class="detail-bloque-label">${labels[i]}</span>
+        <span class="detail-bloque-vals" style="color:${textColor}">${fmt(val)}<span class="detail-bloque-obj"> / ${obj}</span></span>
+      </div>
+      <div class="detail-bar-wrap"><div class="detail-bar" style="width:${pct}%;background:${barColor}"></div></div>
+    </div>`;
+  }).join('');
+  const ej=data.ejercicio?.length?`<div class="detail-ejercicio">🏋️ ${data.ejercicio.join(', ')}${data.ejNotas?' · '+data.ejNotas:''}</div>`:'';
+  const med=data.medidas;
+  const mh=med?`<div class="detail-medidas">${med.peso?`<div class="detail-medida"><div class="dm">${med.peso}kg</div><div class="dl">Peso</div></div>`:''} ${med.cintura?`<div class="detail-medida"><div class="dm">${med.cintura}cm</div><div class="dl">Cintura</div></div>`:''} ${med.brazo?`<div class="detail-medida"><div class="dm">${med.brazo}cm</div><div class="dl">Brazo</div></div>`:''}</div>`:'';
+  detail.innerHTML=`<div class="day-detail-title">${day} ${MESES[calMonth]}</div><div class="detail-bloques-full">${bh}</div>${ej}${mh}`;
+  detail.classList.add('show');
+}
+
+function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendario();document.getElementById('day-detail').classList.remove('show');}
+function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendario();document.getElementById('day-detail').classList.remove('show');}
+
+// RECETAS
+function setFilter(cat,btn){
+  currentFilter=cat;
+  document.querySelectorAll('.filter-btn').forEach(b=>{b.style.background='';b.style.color='';});
+  const bgMap={all:'var(--surface2)',desayuno:'var(--p)',comida:'var(--c)',cena:'var(--g)'};
+  btn.style.background=bgMap[cat]||'var(--surface2)';btn.style.color='white';
+  renderRecetasList();
+}
+function renderRecetasList(search=''){
+  let f=state.recetas;
+  if(currentFilter!=='all')f=f.filter(r=>r.cat===currentFilter);
+  if(search)f=f.filter(r=>r.nombre.toLowerCase().includes(search.toLowerCase()));
+  const cc={desayuno:'var(--p)',comida:'var(--c)',cena:'var(--g)',snack:'var(--f)'};
+  document.getElementById('recetas-list').innerHTML=f.length===0?'<div class="empty">No hay recetas</div>':
+    f.map(r=>{const b=[r.p>0?`<span class="badge badge-p">${fmt(r.p)}P</span>`:'',r.c>0?`<span class="badge badge-c">${fmt(r.c)}C</span>`:'',r.g>0?`<span class="badge badge-g">${fmt(r.g)}G</span>`:'',r.f>0?`<span class="badge badge-f">${fmt(r.f)}F</span>`:'',r.v>0?`<span class="badge badge-v">${fmt(r.v)}V</span>`:'' ].join('');
+    return `<div class="receta-full"><div class="receta-full-header"><div><div class="receta-full-name">${r.nombre}</div><div class="receta-full-cat" style="color:${cc[r.cat]||'var(--muted)'}">${r.cat}</div></div><button class="delete-btn" onclick="deleteReceta(${r.id})">✕</button></div>${r.ingredientes?`<div style="font-family:Cormorant Garamond,serif;font-size:14px;color:var(--ink-light);margin:5px 0;line-height:1.5;font-style:italic">${r.ingredientes}</div>`:''}<div class="receta-badges" style="margin-top:7px">${b}</div></div>`;}).join('');
+}
+function deleteReceta(id){
+  if(!confirm('¿Eliminar?'))return;
+  state.recetas=state.recetas.filter(r=>r.id!==id);
+  COMIDAS.forEach(c=>{state.hoy.seleccionadas[c]=(state.hoy.seleccionadas[c]||[]).filter(i=>i!==id);});
+  saveState();renderRecetasList();
+}
+
+// MODAL
+function openModal(){document.getElementById('modal').classList.add('open');['r-nombre','r-ingredientes'].forEach(id=>document.getElementById(id).value='');['r-p','r-c','r-g','r-f','r-v'].forEach(id=>document.getElementById(id).value='0');}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+function closeModalOutside(e){if(e.target===document.getElementById('modal'))closeModal();}
+function saveReceta(){
+  const n=document.getElementById('r-nombre').value.trim();if(!n){alert('Añade un nombre');return;}
+  state.recetas.push({id:state.nextId++,nombre:n,cat:document.getElementById('r-cat').value,ingredientes:document.getElementById('r-ingredientes').value.trim()||'',p:parseFloat(document.getElementById('r-p').value)||0,c:parseFloat(document.getElementById('r-c').value)||0,g:parseFloat(document.getElementById('r-g').value)||0,f:parseFloat(document.getElementById('r-f').value)||0,v:parseFloat(document.getElementById('r-v').value)||0});
+  saveState();closeModal();renderRecetasList();
+}
+
+// NAV
+function showPage(page,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.add('active');
+  btn.classList.add('active');
+  if(page==='semana')renderSemana();
+  if(page==='recetas')renderRecetasList();
+  if(page==='hoy')renderComidas();
+  if(page==='progreso'){renderGraficas();renderCalendario();}
+}
+
+// BACKUP
+function toggleBackup(){
+  const bar=document.getElementById('backup-bar');
+  bar.style.display=bar.style.display==='none'?'block':'none';
+  document.getElementById('backup-msg').style.display='none';
+}
+function exportarJSON(){
+  const data=JSON.stringify(state,null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const fecha=new Date().toISOString().slice(0,10);
+  a.href=url;a.download=`galancho-backup-${fecha}.json`;
+  a.click();URL.revokeObjectURL(url);
+  const msg=document.getElementById('backup-msg');
+  msg.textContent='✓ Backup exportado correctamente';msg.style.display='block';
+  setTimeout(()=>msg.style.display='none',3000);
+}
+function importarJSON(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const imported=JSON.parse(ev.target.result);
+      if(!imported.recetas||!imported.historial)throw new Error('Formato inválido');
+      state={...state,...imported};
+      saveState();renderComidas();
+      const msg=document.getElementById('backup-msg');
+      msg.textContent=`✓ Importado correctamente · ${Object.keys(imported.historial).length} días de historial`;
+      msg.style.display='block';
+      setTimeout(()=>msg.style.display='none',4000);
+    }catch(err){
+      const msg=document.getElementById('backup-msg');
+      msg.textContent='✗ Error al importar. ¿Es el fichero correcto?';
+      msg.style.color='var(--over)';msg.style.display='block';
+    }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+
+// INIT
+function init(){
+  loadState();
+  const d=new Date();
+  calYear=d.getFullYear();calMonth=d.getMonth();
+  const dn=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const mn2=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  document.getElementById('fecha-hoy').textContent=`${dn[d.getDay()]}, ${d.getDate()} de ${mn2[d.getMonth()]}`;
+  const key=todayKey();
+  if(state.historial[key]){
+    state.hoy.seleccionadas=state.historial[key].seleccionadas||{Desayuno:[],Comida:[],Cena:[]};
+    state.hoy.ejercicio=state.historial[key].ejercicio||[];
+    state.hoy.ejNotas=state.historial[key].ejNotas||'';
+    state.hoy.tipo=state.historial[key].tipo||'descanso';
+  }
+  const dt={0:'trekking',1:'fuerza',2:'boxeo',3:'fuerza',4:'boxeo',5:'descanso',6:'trekking'};
+  const tipo=state.hoy.tipo||dt[d.getDay()];
+  document.querySelectorAll('.day-btn').forEach(b=>{if(b.textContent.toLowerCase().includes(tipo))b.classList.add('active');});
+  renderComidas();
+}
+init();
+</script>
+</body>
+</html>
