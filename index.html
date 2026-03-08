@@ -388,6 +388,7 @@ function saveState(){
   const key=todayKey();
   if(!state.historial[key])state.historial[key]={};
   state.historial[key]={...state.historial[key],seleccionadas:state.hoy.seleccionadas,ejercicio:state.hoy.ejercicio,ejNotas:state.hoy.ejNotas,tipo:state.hoy.tipo};
+  state.lastActiveDay = key;
   try{localStorage.setItem('galancho-v2',JSON.stringify(state));}catch(e){}
 }
 
@@ -658,12 +659,24 @@ function init(){
   const mn2=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   document.getElementById('fecha-hoy').textContent=`${dn[d.getDay()]}, ${d.getDate()} de ${mn2[d.getMonth()]}`;
   const key=todayKey();
+  // Comprobar si el último día activo era hoy o anterior
+  const lastDay = state.lastActiveDay || '';
+  if(lastDay && lastDay !== key){
+    // Es un día nuevo — resetear hoy completamente
+    state.hoy = {tipo:'descanso', seleccionadas:{Desayuno:[],Comida:[],Cena:[]}, ejercicio:[], ejNotas:''};
+  }
+  // Cargar datos de hoy si existen en historial
   if(state.historial[key]){
     state.hoy.seleccionadas=state.historial[key].seleccionadas||{Desayuno:[],Comida:[],Cena:[]};
     state.hoy.ejercicio=state.historial[key].ejercicio||[];
     state.hoy.ejNotas=state.historial[key].ejNotas||'';
     state.hoy.tipo=state.historial[key].tipo||'descanso';
+  } else {
+    // Día nuevo sin datos — empezar en 0
+    state.hoy = {tipo:'descanso', seleccionadas:{Desayuno:[],Comida:[],Cena:[]}, ejercicio:[], ejNotas:''};
   }
+  state.lastActiveDay = key;
+  try{localStorage.setItem('galancho-v2', JSON.stringify(state));}catch(e){}
   const dt={0:'trekking',1:'fuerza',2:'boxeo',3:'fuerza',4:'boxeo',5:'descanso',6:'trekking'};
   const tipo=state.hoy.tipo||dt[d.getDay()];
   document.querySelectorAll('.day-btn').forEach(b=>{if(b.textContent.toLowerCase().includes(tipo))b.classList.add('active');});
